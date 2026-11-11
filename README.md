@@ -1,5 +1,7 @@
 # Talda — доказательная методика
 
+Live: https://talda-mvp.vercel.app
+
 Talda shows which chapter of which textbook, in which language edition, is failing students, and turns that into evidence-backed fixes. Built for the Zhambyl Hub hackathon case "Data-Driven Curriculum".
 
 **What it does**
