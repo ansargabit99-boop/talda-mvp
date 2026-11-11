@@ -1,0 +1,12 @@
+/* MVP additions: forms, login, item editor */
+.fld{display:flex;flex-direction:column;gap:4px;font-size:13.5px;min-width:0}
+.fld > span{color:var(--muted);font-weight:500}
+.fld input[type=text],.fld input[type=password],.fld input[type=number],.fld select,.fld textarea{width:100%}
+.fld.opt{flex-direction:row;align-items:center;gap:10px}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+select{font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+input[type=password]{font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+input[type=file]{font:inherit;max-width:100%}
+.btn.small{padding:4px 10px;font-size:12.5px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.demo-badge .row{gap:6px}
