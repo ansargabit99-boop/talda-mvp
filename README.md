@@ -29,7 +29,7 @@ For a demo: log in as the methodologist, go to **Загрузка результ
 
 Vercel functions don't keep files between requests, so production uses Postgres.
 
-1. In Vercel, **Add New → Project** and import this GitHub repository. No build settings are needed (`vercel.json` routes everything to `api/index.py`).
+1. In Vercel, **Add New → Project** and import this GitHub repository. Vercel detects FastAPI (`app/main.py`) on its own; no build settings are needed.
 2. **Storage → Create Database → Neon (Postgres)** and connect it to the project. This sets `DATABASE_URL` automatically.
 3. **Settings → Environment Variables:** add `ADMIN_PASSWORD` (methodologist password) and `GEMINI_API_KEY`. `GEMINI_MODEL` is optional; the default is `gemini-2.5-flash`.
 4. Redeploy. The tables and the `metodist` account are created on first request.
@@ -50,7 +50,7 @@ For the base items T\*.1–T\*.3, letter A is the correct answer and B–D are t
 app/main.py           FastAPI: auth, schools, uploads, dataset, item bank, Gemini
 app/static/engine.js  analytics: statistics, findings, views
 app/static/app.js     login, uploads, item bank, AI memo, RU/KZ switch
-api/index.py          Vercel entrypoint
+
 ```
 
 ## Limits (honest list for judges)

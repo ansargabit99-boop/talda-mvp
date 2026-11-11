@@ -6,3 +6,6 @@ talda.db
 first_run_credentials.txt
 .vercel/
 .claude/
+
+.vercel
+.env*
