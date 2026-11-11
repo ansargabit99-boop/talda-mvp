@@ -47,6 +47,7 @@ IS_PG = bool(PG_URL)
 ON_VERCEL = bool(os.getenv("VERCEL"))
 DB_PATH = Path(os.getenv("TALDA_DB") or ("/tmp/talda.db" if ON_VERCEL else ROOT / "talda.db"))
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_FALLBACK = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite")
 SESSION_DAYS = 14
 MAX_UPLOAD = 40 * 1024 * 1024
 
@@ -461,16 +462,26 @@ def gemini(prompt: str, json_mode: bool = False) -> str:
     body = {"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3}}
     if json_mode:
         body["generationConfig"]["responseMimeType"] = "application/json"
-    req = urllib.request.Request(
-        f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent",
-        data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
-    try:
-        with urllib.request.urlopen(req, timeout=55) as r:
-            data = json.load(r)
-    except urllib.error.HTTPError as e:
-        raise HTTPException(502, f"Gemini вернул ошибку {e.code}: {e.read().decode(errors='replace')[:300]}")
-    except urllib.error.URLError as e:
-        raise HTTPException(502, f"Нет связи с Gemini: {e.reason}")
+    # Gemini often answers 503/429 under load: retry with backoff, then fall back to a lighter model.
+    attempts = [GEMINI_MODEL, GEMINI_MODEL, GEMINI_FALLBACK, GEMINI_FALLBACK]
+    data, last = None, ""
+    for n, model in enumerate(attempts):
+        req = urllib.request.Request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+            data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
+        try:
+            with urllib.request.urlopen(req, timeout=55) as r:
+                data = json.load(r)
+            break
+        except urllib.error.HTTPError as e:
+            last = f"Gemini вернул ошибку {e.code}: {e.read().decode(errors='replace')[:300]}"
+            if e.code not in (429, 500, 503) or n == len(attempts) - 1:
+                raise HTTPException(502, last)
+            time.sleep(1.5 * (n + 1))
+        except urllib.error.URLError as e:
+            raise HTTPException(502, f"Нет связи с Gemini: {e.reason}")
+    if data is None:
+        raise HTTPException(502, last or "Gemini недоступен, попробуйте через минуту")
     try:
         return "".join(p.get("text", "") for p in data["candidates"][0]["content"]["parts"])
     except (KeyError, IndexError):
